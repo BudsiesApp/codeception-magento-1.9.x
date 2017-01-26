@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimus\Magento1\Codecepttion;
+namespace Optimus\Magento1\Codeception;
 
 use Symfony\Component\BrowserKit\Client;
 use Symfony\Component\BrowserKit\Response;
