@@ -1,0 +1,11 @@
+.idea/
+.idea_modules/
+nbproject/
+
+composer.phar
+composer.lock
+/vendor/
+
+
+
+

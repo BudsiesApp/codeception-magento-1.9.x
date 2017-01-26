@@ -1,0 +1,24 @@
+{
+  "name": "optimus/codeception-magento-1.9.x",
+  "description": "Codeception module for the Magento 1.9.x",
+  "type": "library",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Anton Kurnosov",
+      "email": "mail@kurnosov.info"
+    }
+  ],
+  "version": "dev-master",
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=5.6.0",
+    "codeception/codeception": "2.2.*"
+  },
+  "require-dev": {
+
+  },
+  "autoload": {
+    "psr-4": { "Codeception\\Magento1\\Codeception\\": "src" }
+  }
+}
