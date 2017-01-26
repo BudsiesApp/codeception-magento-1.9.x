@@ -19,6 +19,6 @@
 
   },
   "autoload": {
-    "psr-4": { "Codeception\\Magento1\\Codeception\\": "src" }
+    "psr-4": { "Optimus\\Magento1\\Codeception\\": "src" }
   }
 }
