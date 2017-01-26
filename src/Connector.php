@@ -14,7 +14,7 @@ class Connector extends Client
     /**
      * @var string
      */
-    public $configParameter;
+    public $homeDir;
 
     /**
      * @var array
@@ -65,7 +65,7 @@ class Connector extends Client
         // intercept response here
 
         ob_start();
-        include("index.php");
+        include($this->homeDir . DIRECTORY_SEPARATOR . 'index.php');
         $content = ob_get_clean();
 
         // catch "location" header and display it in debug, otherwise it would be handled
@@ -74,28 +74,29 @@ class Connector extends Client
             Debug::debug("[Headers] " . json_encode($this->headers));
         }
 
-        $cookies = $response->headers->getCookies();
-        foreach ($cookies as $cookie) {
-            /** @var Cookie $cookie */
-
-            $this->getCookieJar()->set(
-                new \Symfony\Component\BrowserKit\Cookie(
-                    $cookie->getName(),
-                    $cookie->getValue(),
-                    $cookie->getExpiresTime(),
-                    $cookie->getPath(),
-                    $cookie->getDomain(),
-                    $cookie->isSecure(),
-                    $cookie->isHttpOnly()
-                )
-            );
-        }
+//        $cookies = $response->headers->getCookies();
+//        foreach ($cookies as $cookie) {
+//            /** @var Cookie $cookie */
+//
+//            $this->getCookieJar()->set(
+//                new \Symfony\Component\BrowserKit\Cookie(
+//                    $cookie->getName(),
+//                    $cookie->getValue(),
+//                    $cookie->getExpiresTime(),
+//                    $cookie->getPath(),
+//                    $cookie->getDomain(),
+//                    $cookie->isSecure(),
+//                    $cookie->isHttpOnly()
+//                )
+//            );
+//        }
 
 
         return new Response(
+            $content, 200, [] /*
             $response->getContent(),
             $response->getStatusCode(),
-            $response->headers->all()
+            $response->headers->all() */
         );
     }
 }

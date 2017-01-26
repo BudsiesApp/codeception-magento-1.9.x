@@ -1,12 +1,12 @@
 <?php
 
-namespace Optimus\Magento1\Codecepttion;
+namespace Optimus\Magento1\Codeception;
 
 use Codeception\TestCase;
 use Codeception\Lib\Framework;
 use Codeception\Configuration;
 
-class MagentoHelper extends Framework
+class Helper extends Framework
 {
     protected $requiredFields = ['config'];
 
@@ -29,7 +29,8 @@ class MagentoHelper extends Framework
 
             $this->headers['HOST'] = $baseUrl;
         }
-        $this->client->configParameter = Configuration::projectDir() . $this->config['config'];
+
+        $this->client->homeDir = Configuration::projectDir() . DIRECTORY_SEPARATOR . $this->config['homeDir'];
     }
 
     public function _after(TestCase $test)
