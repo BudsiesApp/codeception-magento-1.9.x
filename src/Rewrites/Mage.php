@@ -423,7 +423,7 @@ final class Mage
             switch ($modelClass)
             {
                 case 'core/cookie':
-                    self::register(new \Optimus\Magento1\Codeception\Mage_Core_Model_Cookie());
+                    self::register(new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Model_Cookie());
                     break;
 
                 default:

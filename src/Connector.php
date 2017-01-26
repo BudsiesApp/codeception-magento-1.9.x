@@ -142,7 +142,7 @@ class Connector extends Client
         // intercept response here
 
         ob_start();
-        $response = new Mage_Core_Controller_Response_Http();
+        $response = new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Response_Http();
         $this->doRequestOnIndexEntry($response);
         ob_get_clean();
 
