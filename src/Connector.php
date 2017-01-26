@@ -80,7 +80,7 @@ class Connector extends Client
         $this->bootstrapMagento();
 
         if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE'])) {
-            Mage::setIsDeveloperMode(true);
+            \Mage::setIsDeveloperMode(true);
         }
 
         umask(0);
@@ -91,8 +91,8 @@ class Connector extends Client
         /* Run store or run website */
         $mageRunType = isset($_SERVER['MAGE_RUN_TYPE']) ? $_SERVER['MAGE_RUN_TYPE'] : 'store';
 
-        Mage::run($mageRunCode, $mageRunType);
-        Mage::reset();
+        \Mage::run($mageRunCode, $mageRunType);
+        \Mage::reset();
     }
 
     /**
