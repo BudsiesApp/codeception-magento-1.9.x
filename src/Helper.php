@@ -8,7 +8,7 @@ use Codeception\Configuration;
 
 class Helper extends Framework
 {
-    protected $requiredFields = ['config'];
+    protected $requiredFields = ['homeDir', 'baseUrl'];
 
     public function _initialize()
     {
