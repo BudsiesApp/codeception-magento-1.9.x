@@ -66,7 +66,11 @@ class Connector extends Client
 //            exit;
 //        }
 
-        require_once MAGENTO_ROOT . '/app/bootstrap.php';
+        // require_once MAGENTO_ROOT . '/app/bootstrap.php';
+        // the following replaces bootstrap.php including
+        require_once MAGENTO_ROOT . '/../vendor/autoload.php';
+        require_once __DIR__ . '/Rewrites/Mage.php';
+        require_once MAGENTO_ROOT . '/Mage.bootstrap.php';
 
         $this->_isBootstrapped = true;
     }
@@ -74,7 +78,7 @@ class Connector extends Client
     /**
      * @return void
      */
-    protected function doRequestOnIndexEntry()
+    protected function doRequestOnIndexEntry(\Mage_Core_Controller_Response_Http $response)
     {
 
         $this->bootstrapMagento();
@@ -91,8 +95,12 @@ class Connector extends Client
         /* Run store or run website */
         $mageRunType = isset($_SERVER['MAGE_RUN_TYPE']) ? $_SERVER['MAGE_RUN_TYPE'] : 'store';
 
-        \Mage::run($mageRunCode, $mageRunType);
-        \Mage::reset();
+        try
+        {
+            \Mage::run($mageRunCode, $mageRunType, ['options' => $response]);
+        } catch (ExitException $e) {
+
+        }
     }
 
     /**
@@ -134,8 +142,9 @@ class Connector extends Client
         // intercept response here
 
         ob_start();
-        $this->doRequestOnIndexEntry();
-        $content = ob_get_clean();
+        $response = new Mage_Core_Controller_Response_Http();
+        $this->doRequestOnIndexEntry($response);
+        ob_get_clean();
 
         // catch "location" header and display it in debug, otherwise it would be handled
         // by symfony browser-kit and not displayed.
@@ -143,29 +152,29 @@ class Connector extends Client
             Debug::debug("[Headers] " . json_encode($this->headers));
         }
 
-//        $cookies = $response->headers->getCookies();
-//        foreach ($cookies as $cookie) {
-//            /** @var Cookie $cookie */
-//
-//            $this->getCookieJar()->set(
-//                new \Symfony\Component\BrowserKit\Cookie(
-//                    $cookie->getName(),
-//                    $cookie->getValue(),
-//                    $cookie->getExpiresTime(),
-//                    $cookie->getPath(),
-//                    $cookie->getDomain(),
-//                    $cookie->isSecure(),
-//                    $cookie->isHttpOnly()
-//                )
-//            );
-//        }
+        $cookies = Mage::getSingleton('core/cookie')->getCollectedValues();
 
+        foreach ($cookies as $cookie) {
+            /** @var Cookie $cookie */
 
+            $this->getCookieJar()->set(
+                new \Symfony\Component\BrowserKit\Cookie(
+                    $cookie['name'],
+                    $cookie['value'],
+                    $cookie['expire'],
+                    $cookie['path'],
+                    $cookie['domain'],
+                    $cookie['secure'],
+                    $cookie['httponly']
+                )
+            );
+        }
+
+        \Mage::reset();
         return new Response(
-            $content, 200, [] /*
-            $response->getContent(),
-            $response->getStatusCode(),
-            $response->headers->all() */
+            $response->getBody(),
+            $response->getHttpResponseCode(),
+            $response->getCollectedHeaders()
         );
     }
 }
