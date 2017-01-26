@@ -213,7 +213,7 @@ final class Mage
 
         if ('' === $appRoot) {
             // automagically find application root by dirname of Mage.php
-            $appRoot = dirname(__FILE__);
+            $appRoot = MAGENTO_ROOT . '/app';
         }
 
         $appRoot = realpath($appRoot);
@@ -423,7 +423,7 @@ final class Mage
             switch ($modelClass)
             {
                 case 'core/cookie':
-                    self::register(new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Model_Cookie());
+                    self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Model_Cookie());
                     break;
 
                 default:

@@ -1,7 +1,7 @@
 <?php
 namespace Optimus\Magento1\Codeception\Rewrites;
 
-class Mage_Core_Model_Cookie
+class Mage_Core_Model_Cookie extends \Mage_Core_Model_Cookie
 {
     protected $cookies = [];
 

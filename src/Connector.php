@@ -68,9 +68,9 @@ class Connector extends Client
 
         // require_once MAGENTO_ROOT . '/app/bootstrap.php';
         // the following replaces bootstrap.php including
-        require_once MAGENTO_ROOT . '/../vendor/autoload.php';
+        require_once MAGENTO_ROOT . '/vendor/autoload.php';
         require_once __DIR__ . '/Rewrites/Mage.php';
-        require_once MAGENTO_ROOT . '/Mage.bootstrap.php';
+        require_once MAGENTO_ROOT . '/app/Mage.bootstrap.php';
 
         $this->_isBootstrapped = true;
     }
@@ -80,9 +80,6 @@ class Connector extends Client
      */
     protected function doRequestOnIndexEntry(\Mage_Core_Controller_Response_Http $response)
     {
-
-        $this->bootstrapMagento();
-
         if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE'])) {
             \Mage::setIsDeveloperMode(true);
         }
@@ -97,7 +94,7 @@ class Connector extends Client
 
         try
         {
-            \Mage::run($mageRunCode, $mageRunType, ['options' => $response]);
+            \Mage::run($mageRunCode, $mageRunType, ['response' => $response]);
         } catch (ExitException $e) {
 
         }
@@ -142,6 +139,8 @@ class Connector extends Client
         // intercept response here
 
         ob_start();
+        $this->bootstrapMagento();
+        \Mage::reset();
         $response = new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Response_Http();
         $this->doRequestOnIndexEntry($response);
         ob_get_clean();
@@ -152,7 +151,7 @@ class Connector extends Client
             Debug::debug("[Headers] " . json_encode($this->headers));
         }
 
-        $cookies = Mage::getSingleton('core/cookie')->getCollectedValues();
+        $cookies = \Mage::getSingleton('core/cookie')->getCollectedValues();
 
         foreach ($cookies as $cookie) {
             /** @var Cookie $cookie */
@@ -170,7 +169,6 @@ class Connector extends Client
             );
         }
 
-        \Mage::reset();
         return new Response(
             $response->getBody(),
             $response->getHttpResponseCode(),
