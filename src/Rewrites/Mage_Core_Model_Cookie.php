@@ -1,5 +1,5 @@
 <?php
-namespace Optimus\Magento1\Codeception;
+namespace Optimus\Magento1\Codeception\Rewrites;
 
 class Mage_Core_Model_Cookie
 {

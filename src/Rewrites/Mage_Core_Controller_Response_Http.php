@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimus\Magento1\Codeception;
+namespace Optimus\Magento1\Codeception\Rewrites;
 
 class Mage_Core_Controller_Response_Http extends \Mage_Core_Controller_Response_Http
 {
