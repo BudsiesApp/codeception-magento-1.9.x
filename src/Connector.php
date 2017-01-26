@@ -27,6 +27,75 @@ class Connector extends Client
     public $statusCode;
 
     /**
+     * @var bool
+     */
+    private $_isBootstrapped = false;
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    protected function bootstrapMagento()
+    {
+        if ($this->_isBootstrapped) {
+            return;
+        }
+
+        $homeDir = realpath($this->homeDir);
+        if (!$homeDir) {
+            throw new \Exception(
+                "Can't resolve real path for the home directory.\n".
+                "`homeDir` value is: {$this->homeDir}"
+            );
+        }
+
+        /**
+         * Compilation includes configuration file
+         */
+        define('MAGENTO_ROOT', $homeDir);
+
+        $compilerConfig = MAGENTO_ROOT . '/includes/config.php';
+        if (file_exists($compilerConfig)) {
+            include $compilerConfig;
+        }
+
+//        $maintenanceFile = 'maintenance.flag';
+//
+//        if (file_exists($maintenanceFile)) {
+//            include_once dirname(__FILE__) . '/errors/503.php';
+//            exit;
+//        }
+
+        require_once MAGENTO_ROOT . '/app/bootstrap.php';
+
+        $this->_isBootstrapped = true;
+    }
+
+    /**
+     * @return void
+     */
+    protected function doRequestOnIndexEntry()
+    {
+
+        $this->bootstrapMagento();
+
+        if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE'])) {
+            Mage::setIsDeveloperMode(true);
+        }
+
+        umask(0);
+
+        /* Store or website code */
+        $mageRunCode = isset($_SERVER['MAGE_RUN_CODE']) ? $_SERVER['MAGE_RUN_CODE'] : '';
+
+        /* Run store or run website */
+        $mageRunType = isset($_SERVER['MAGE_RUN_TYPE']) ? $_SERVER['MAGE_RUN_TYPE'] : 'store';
+
+        Mage::run($mageRunCode, $mageRunType);
+        Mage::reset();
+    }
+
+    /**
      * @param \Symfony\Component\BrowserKit\Request $request
      * @return \Symfony\Component\BrowserKit\Response
      */
@@ -65,7 +134,7 @@ class Connector extends Client
         // intercept response here
 
         ob_start();
-        include($this->homeDir . DIRECTORY_SEPARATOR . 'index.php');
+        $this->doRequestOnIndexEntry();
         $content = ob_get_clean();
 
         // catch "location" header and display it in debug, otherwise it would be handled
