@@ -426,6 +426,10 @@ final class Mage
                     self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Model_Cookie());
                     break;
 
+                case 'admin/session':
+                    self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Admin_Model_Session());
+                    break;
+
                 default:
                     self::register($registryKey, self::getModel($modelClass, $arguments));
             }
@@ -623,7 +627,7 @@ final class Mage
             if (isset($options['edition'])) {
                 self::$_currentEdition = $options['edition'];
             }
-            self::$_app    = new Mage_Core_Model_App();
+            self::$_app = new Mage_Core_Model_App();
             if (isset($options['request'])) {
                 self::$_app->setRequest($options['request']);
             }
@@ -633,12 +637,18 @@ final class Mage
             self::$_events = new Varien_Event_Collection();
             self::_setIsInstalled($options);
             self::_setConfigModel($options);
-            self::$_app->run(array(
-                'scope_code' => $code,
-                'scope_type' => $type,
-                'options'    => $options,
-            ));
+            self::$_app->run(
+                array(
+                    'scope_code' => $code,
+                    'scope_type' => $type,
+                    'options'    => $options,
+                )
+            );
             Varien_Profiler::stop('mage');
+        } catch (\Optimus\Magento1\Codeception\Exceptions\ExitException $e) {
+            Varien_Profiler::stop('mage');
+            return $e->getResponse();
+
         } catch (Mage_Core_Model_Session_Exception $e) {
             header('Location: ' . self::getBaseUrl());
             die();

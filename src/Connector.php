@@ -76,7 +76,7 @@ class Connector extends Client
     }
 
     /**
-     * @return void
+     * @return mixed
      */
     protected function doRequestOnIndexEntry(\Mage_Core_Controller_Response_Http $response)
     {
@@ -92,12 +92,7 @@ class Connector extends Client
         /* Run store or run website */
         $mageRunType = isset($_SERVER['MAGE_RUN_TYPE']) ? $_SERVER['MAGE_RUN_TYPE'] : 'store';
 
-        try
-        {
-            \Mage::run($mageRunCode, $mageRunType, ['response' => $response]);
-        } catch (ExitException $e) {
-
-        }
+        return \Mage::run($mageRunCode, $mageRunType, ['response' => $response]);
     }
 
     /**
@@ -142,8 +137,11 @@ class Connector extends Client
         $this->bootstrapMagento();
         \Mage::reset();
         $response = new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Response_Http();
-        $this->doRequestOnIndexEntry($response);
-        ob_get_clean();
+        $result  = $this->doRequestOnIndexEntry($response);
+        if ($result instanceof \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Response_Http) {
+            $response = $result;
+        }
+        $content = ob_get_clean();
 
         // catch "location" header and display it in debug, otherwise it would be handled
         // by symfony browser-kit and not displayed.

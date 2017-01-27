@@ -10,8 +10,11 @@ class Mage_Core_Controller_Response_Http extends \Mage_Core_Controller_Response_
     public function sendHeadersAndExit()
     {
         $this->sendHeaders();
-        throw new ExitException();
+        $e = new \Optimus\Magento1\Codeception\Exceptions\ExitException();
+        $e->setResponse($this);
+        throw $e;
     }
+    
 
     /**
      * @return  array
