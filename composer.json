@@ -13,11 +13,18 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=5.6.0",
-    "codeception/codeception": "2.2.*"
+    "codeception/codeception": "2.2.*",
+    "league/oauth1-client": "dev-including-non-standard-port-into-basestring"
   },
   "require-dev": {
 
   },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/kavw/oauth1-client"
+    }
+  ],
   "autoload": {
     "psr-4": { "Optimus\\Magento1\\Codeception\\": "src" }
   }
