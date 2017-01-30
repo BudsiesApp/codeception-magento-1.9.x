@@ -2,6 +2,7 @@
 
 namespace Optimus\Magento1\Codeception;
 
+use Optimus\Magento1\Codeception\Exceptions\OAuthAppCallbackException;
 use Symfony\Component\BrowserKit\Client;
 use Symfony\Component\BrowserKit\Response;
 use Codeception\Lib\Connector\Shared\PhpSuperGlobalsConverter;
@@ -15,6 +16,11 @@ class Connector extends Client
      * @var string
      */
     public $homeDir;
+
+    /**
+     * @var string
+     */
+    public $oauthAppCallback;
 
     /**
      * @var array
@@ -142,6 +148,18 @@ class Connector extends Client
             $response = $result;
         }
         $content = ob_get_clean();
+        if ($this->oauthAppCallback && $response) {
+            $a = 1;
+            $headers = $response->getCollectedHeaders();
+            foreach ($headers as $name => $value) {
+                if ($name === 'Location' && strpos($value, $this->oauthAppCallback) === 0) {
+                    $e = new OAuthAppCallbackException();
+                    $e->setResponse($response);
+                    throw $e;
+                }
+            }
+        }
+
 
         // catch "location" header and display it in debug, otherwise it would be handled
         // by symfony browser-kit and not displayed.

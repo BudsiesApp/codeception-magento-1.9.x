@@ -430,6 +430,10 @@ final class Mage
                     self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Admin_Model_Session());
                     break;
 
+                case 'oauth/observer':
+                    self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Oauth_Model_Observer());
+                    break;
+
                 default:
                     self::register($registryKey, self::getModel($modelClass, $arguments));
             }

@@ -16,6 +16,4 @@ class ExitException extends Exception
     {
         return $this->response;
     }
-
-
 }
