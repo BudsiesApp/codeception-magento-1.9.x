@@ -4,7 +4,7 @@ namespace Optimus\Magento1\Codeception\Rewrites;
 
 use Optimus\Magento1\Codeception\Interfaces\CollectedHeadersInterface;
 
-class Mage_Core_Controller_Response_Http extends \Mage_Core_Controller_Response_Http
+class Mage_Api2_Model_Response extends \Mage_Api2_Model_Response
     implements CollectedHeadersInterface
 {
     /**
@@ -17,7 +17,6 @@ class Mage_Core_Controller_Response_Http extends \Mage_Core_Controller_Response_
         $e->setResponse($this);
         throw $e;
     }
-    
 
     /**
      * @return  array
@@ -40,5 +39,4 @@ class Mage_Core_Controller_Response_Http extends \Mage_Core_Controller_Response_
 
         return $headers;
     }
-
 }

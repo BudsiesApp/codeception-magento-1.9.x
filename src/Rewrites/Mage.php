@@ -434,6 +434,14 @@ final class Mage
                     self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Oauth_Model_Observer());
                     break;
 
+                case 'api2/response':
+                    self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Api2_Model_Response());
+                    break;
+
+                case 'api2/request':
+                    self::register($registryKey, new \Optimus\Magento1\Codeception\Rewrites\Mage_Api2_Model_Request());
+                    break;
+
                 default:
                     self::register($registryKey, self::getModel($modelClass, $arguments));
             }
@@ -570,7 +578,7 @@ final class Mage
     public static function app($code = '', $type = 'store', $options = array())
     {
         if (null === self::$_app) {
-            self::$_app = new Mage_Core_Model_App();
+            self::$_app = new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Model_App();
             self::setRoot();
             self::$_events = new Varien_Event_Collection();
             self::_setIsInstalled($options);
@@ -631,7 +639,7 @@ final class Mage
             if (isset($options['edition'])) {
                 self::$_currentEdition = $options['edition'];
             }
-            self::$_app = new Mage_Core_Model_App();
+            self::$_app = new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Model_App();
             if (isset($options['request'])) {
                 self::$_app->setRequest($options['request']);
             }

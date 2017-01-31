@@ -7,6 +7,7 @@ use Symfony\Component\BrowserKit\Client;
 use Symfony\Component\BrowserKit\Response;
 use Codeception\Lib\Connector\Shared\PhpSuperGlobalsConverter;
 use Codeception\Util\Debug;
+use Optimus\Magento1\Codeception\Interfaces\CollectedHeadersInterface;
 
 class Connector extends Client
 {
@@ -58,7 +59,9 @@ class Connector extends Client
         /**
          * Compilation includes configuration file
          */
-        define('MAGENTO_ROOT', $homeDir);
+        if (!defined('MAGENTO_ROOT')) {
+            define('MAGENTO_ROOT', $homeDir);
+        }
 
         $compilerConfig = MAGENTO_ROOT . '/includes/config.php';
         if (file_exists($compilerConfig)) {
@@ -84,11 +87,8 @@ class Connector extends Client
     /**
      * @return mixed
      */
-    protected function doRequestOnIndexEntry(\Mage_Core_Controller_Response_Http $response)
+    protected function doRequestOnIndexEntry()
     {
-        if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE'])) {
-            \Mage::setIsDeveloperMode(true);
-        }
 
         umask(0);
 
@@ -98,12 +98,64 @@ class Connector extends Client
         /* Run store or run website */
         $mageRunType = isset($_SERVER['MAGE_RUN_TYPE']) ? $_SERVER['MAGE_RUN_TYPE'] : 'store';
 
-        return \Mage::run($mageRunCode, $mageRunType, ['response' => $response]);
+        $result = \Mage::run($mageRunCode, $mageRunType);
+        if (is_object($result) && $result instanceof CollectedHeadersInterface) {
+            return $result;
+        }
+
+        return \Mage::app()->getResponse();
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function doRequestOnApiEntry()
+    {
+        \Mage::$headersSentThrowsException = false;
+        \Mage::init('admin');
+        \Mage::app()->loadAreaPart(\Mage_Core_Model_App_Area::AREA_GLOBAL, \Mage_Core_Model_App_Area::PART_EVENTS);
+        \Mage::app()->loadAreaPart(\Mage_Core_Model_App_Area::AREA_ADMINHTML, \Mage_Core_Model_App_Area::PART_EVENTS);
+
+        // query parameter "type" is set by .htaccess rewrite rule
+        $apiAlias = \Mage::app()->getRequest()->getParam('type');
+
+        // check request could be processed by API2
+        if (in_array($apiAlias, \Mage_Api2_Model_Server::getApiTypes())) {
+            // emulate index.php entry point for correct URLs generation in API
+            \Mage::register('custom_entry_point', true);
+            /** @var $server Mage_Api2_Model_Server */
+            $server = \Mage::getSingleton('api2/server');
+
+            $server->run();
+
+            return \Mage::getSingleton('api2/response');
+
+        } else {
+            /* @var $server \Mage_Api_Model_Server */
+            $server = \Mage::getSingleton('api/server');
+            if (!$apiAlias) {
+                $adapterCode = 'default';
+            } else {
+                $adapterCode = $server->getAdapterCodeByAlias($apiAlias);
+            }
+            // if no adapters found in aliases - find it by default, by code
+            if (null === $adapterCode) {
+                $adapterCode = $apiAlias;
+            }
+
+            $server->initialize($adapterCode);
+            // emulate index.php entry point for correct URLs generation in API
+            \Mage::register('custom_entry_point', true);
+            $server->run();
+
+            return \Mage::app()->getResponse();
+        }
     }
 
     /**
      * @param \Symfony\Component\BrowserKit\Request $request
      * @return \Symfony\Component\BrowserKit\Response
+     * @throws OAuthAppCallbackException
      */
     public function doRequest($request)
     {
@@ -131,25 +183,33 @@ class Connector extends Client
             $_GET[$k] = $v;
         }
 
-        //$this->configParameter
 
         $this->headers    = [];
         $this->statusCode = null;
 
-
-        // intercept response here
-
         ob_start();
         $this->bootstrapMagento();
         \Mage::reset();
-        $response = new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Response_Http();
-        $result  = $this->doRequestOnIndexEntry($response);
-        if ($result instanceof \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Response_Http) {
-            $response = $result;
+
+        if (isset($_SERVER['MAGE_IS_DEVELOPER_MODE'])) {
+            \Mage::setIsDeveloperMode(true);
         }
-        $content = ob_get_clean();
+
+        if (preg_match('#^/api/([^/]+)/#', $pathString, $match)) {
+            $_GET['type']     = $match[1];
+            $_REQUEST['type'] = $match[1];
+            $response = $this->doRequestOnApiEntry();
+        } else {
+            $response = $this->doRequestOnIndexEntry();
+        }
+
+        ob_get_clean();
+
+        if (!$response || !is_object($response) || !($response instanceof CollectedHeadersInterface)) {
+            throw new \RuntimeException("Invalid response received");
+        }
+
         if ($this->oauthAppCallback && $response) {
-            $a = 1;
             $headers = $response->getCollectedHeaders();
             foreach ($headers as $name => $value) {
                 if ($name === 'Location' && strpos($value, $this->oauthAppCallback) === 0) {

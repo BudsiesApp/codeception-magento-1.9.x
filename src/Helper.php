@@ -103,8 +103,14 @@ class Helper extends Framework
     {
         $client = $this->getOauthClient();
 
-        $this->headers = $client->getHeaders($this->tokenCredentials, $method, $url);
-        $result = $this->client->request($method, $url, $params);
+        $fullUrl = 'http://' . $this->config['baseUrl'] . "/api/rest$url";
+
+        $this->headers = $client->getHeaders($this->tokenCredentials, $method, $fullUrl);
+        $this->headers['Content-Type'] = 'application/json';
+        // Parameters will be intercepted and encoded into json
+        // see \Optimus\Magento1\Codeception\Rewrites\Mage_Api2_Model_Request
+        $result  = $this->_request($method, $fullUrl, $params);
+        $this->headers = [];
 
         return $result;
     }
