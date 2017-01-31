@@ -111,7 +111,7 @@ class Helper extends Framework
         // see \Optimus\Magento1\Codeception\Rewrites\Mage_Api2_Model_Request
         $result  = $this->_request($method, $fullUrl, $params);
         $this->headers = [];
-
+        $this->client->followRedirects(true);
         return $result;
     }
 }
