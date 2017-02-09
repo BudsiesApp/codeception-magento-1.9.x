@@ -18,12 +18,6 @@
   "require-dev": {
 
   },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/kavw/oauth1-client"
-    }
-  ],
   "autoload": {
     "psr-4": { "Optimus\\Magento1\\Codeception\\": "src" }
   }
