@@ -198,8 +198,10 @@ class Connector extends Client
         if (preg_match('#^/api/([^/]+)/#', $pathString, $match)) {
             $_GET['type']     = $match[1];
             $_REQUEST['type'] = $match[1];
+            $_SERVER['SCRIPT_NAME'] = $_SERVER['SCRIPT_FILENAME'] = 'api.php';
             $response = $this->doRequestOnApiEntry();
         } else {
+            $_SERVER['SCRIPT_NAME'] = $_SERVER['SCRIPT_FILENAME'] = 'index.php';
             $response = $this->doRequestOnIndexEntry();
         }
 
