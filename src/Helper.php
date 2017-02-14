@@ -52,6 +52,10 @@ class Helper extends Framework
             $this->headers['HOST'] = $baseUrl;
         }
 
+        if (isset($this->config['https']) && $this->config['https']) {
+            $this->client->https = true;
+        }
+
         $this->client->homeDir = Configuration::projectDir() . DIRECTORY_SEPARATOR . $this->config['homeDir'];
         $this->client->oauthAppCallback = $this->config['oauth_app_callback'];
     }

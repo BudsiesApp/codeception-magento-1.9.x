@@ -36,6 +36,11 @@ class Connector extends Client
     /**
      * @var bool
      */
+    public $https;
+
+    /**
+     * @var bool
+     */
     private $_isBootstrapped = false;
 
     /**
@@ -177,6 +182,10 @@ class Connector extends Client
         $queryString               = parse_url($uri, PHP_URL_QUERY);
         $_SERVER['REQUEST_URI']    = $queryString === null ? $pathString : $pathString . '?' . $queryString;
         $_SERVER['REQUEST_METHOD'] = strtoupper($request->getMethod());
+
+        if ($this->https) {
+            $_SERVER['HTTPS'] = true;
+        }
 
         parse_str($queryString, $params);
         foreach ($params as $k => $v) {
