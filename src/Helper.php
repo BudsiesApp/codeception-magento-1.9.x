@@ -84,7 +84,7 @@ class Helper extends Framework
      */
     protected function getHostUrl(): string
     {
-        return $this->getScheme() . '://' . $this->config['baseUrl']
+        return $this->getScheme() . '://' . $this->config['baseUrl'];
     }
 
     /**
