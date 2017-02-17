@@ -71,7 +71,26 @@ class Helper extends Framework
         parent::_after($test);
     }
 
-    protected function getOauthClient()
+    /**
+     * @return string
+     */
+    protected function getScheme(): string
+    {
+        return $this->config['https'] && $this->config['https'] === true ? 'https': 'http';
+    }
+
+    /**
+     * @return string
+     */
+    protected function getHostUrl(): string
+    {
+        return $this->getScheme() . '://' . $this->config['baseUrl']
+    }
+
+    /**
+     * @return OAuthClient
+     */
+    protected function getOauthClient(): OAuthClient
     {
         if ($this->oauthClient) {
             return $this->oauthClient;
@@ -81,7 +100,7 @@ class Helper extends Framework
             'identifier'   => $this->config['oauth_app_key'],
             'secret'       => $this->config['oauth_app_secret'],
             'callback_uri' => $this->config['oauth_app_callback'],
-            'host'         => 'http://' . $this->config['baseUrl'],
+            'host'         => $this->getHostUrl(),
             'admin'        => true
         ]);
 
@@ -122,7 +141,7 @@ class Helper extends Framework
 
         $scheme = ($this->config['https'] && $this->config['https'] === true) ? 'https': 'http';
 
-        $fullUrl = $scheme . '://' . $this->config['baseUrl'] . "/api/rest$url";
+        $fullUrl = $this->getHostUrl() . "/api/rest$url";
 
         $this->headers = $client->getHeaders($this->tokenCredentials, $method, $fullUrl);
         $this->headers['Content-Type'] = 'application/json';
