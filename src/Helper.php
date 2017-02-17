@@ -120,7 +120,9 @@ class Helper extends Framework
     {
         $client = $this->getOauthClient();
 
-        $fullUrl = 'http://' . $this->config['baseUrl'] . "/api/rest$url";
+        $scheme = ($this->config['https'] && $this->config['https'] === true) ? 'https': 'http';
+
+        $fullUrl = $scheme . '://' . $this->config['baseUrl'] . "/api/rest$url";
 
         $this->headers = $client->getHeaders($this->tokenCredentials, $method, $fullUrl);
         $this->headers['Content-Type'] = 'application/json';
