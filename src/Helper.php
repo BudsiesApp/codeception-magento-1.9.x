@@ -68,6 +68,8 @@ class Helper extends Framework
         $_POST = [];
         $_COOKIE = [];
         $_REQUEST = [];
+        $this->tokenCredentials = null;
+        $this->oauthClient = null;
         parent::_after($test);
     }
 
