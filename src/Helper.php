@@ -5,6 +5,7 @@ namespace Optimus\Magento1\Codeception;
 use Codeception\Lib\Framework;
 use Codeception\Configuration;
 use Codeception\TestInterface;
+use Optimus\Magento1\Codeception\Exceptions\Exception;
 use Optimus\Magento1\Codeception\Exceptions\OAuthAppCallbackException;
 use Optimus\Magento1\Codeception\OAuth\Client as OAuthClient;
 use Codeception\Util\JsonArray;
@@ -40,17 +41,17 @@ class Helper extends Framework
     public function _before(TestInterface $test)
     {
         $this->client = new Connector();
-        if (isset($this->config['baseUrl'])) {
-            $baseUrl = trim($this->config['baseUrl']);
 
-            if (preg_match('~^https?~', $baseUrl)) {
-                throw new \InvalidArgumentException(
-                    "Please, define baseUrl parameter without protocol part: localhost or localhost:8000"
-                );
-            }
+        $baseUrl = trim($this->config['baseUrl']);
 
-            $this->headers['HOST'] = $baseUrl;
+        if (preg_match('~^https?~', $baseUrl)) {
+            throw new \InvalidArgumentException(
+                "Please, define baseUrl parameter without protocol part: localhost or localhost:8000"
+            );
         }
+
+        $this->headers['HOST'] = $baseUrl;
+
 
         if (isset($this->config['https']) && $this->config['https']) {
             $this->client->https = true;
@@ -58,6 +59,8 @@ class Helper extends Framework
 
         $this->client->homeDir = Configuration::projectDir() . DIRECTORY_SEPARATOR . $this->config['homeDir'];
         $this->client->oauthAppCallback = $this->config['oauth_app_callback'];
+
+        $this->replaceConfig();
     }
 
     public function _after(TestInterface $test)
@@ -68,9 +71,72 @@ class Helper extends Framework
         $_POST = [];
         $_COOKIE = [];
         $_REQUEST = [];
-        $this->tokenCredentials = null;
-        $this->oauthClient = null;
+
+        $this->restoreConfig();
+
         parent::_after($test);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getOriginalConfigFilePath()
+    {
+        return $this->config['homeDir'] . '/app/etc/local.xml';
+    }
+
+    /**
+     * @return null|string
+     */
+    protected function getBackupConfigPath()
+    {
+        return $this->config['homeDir'] . '/app/etc/local.xml.backup';
+    }
+
+    protected function cleanCache()
+    {
+        $realPath = realpath($this->config['homeDir']);
+        if ($realPath) {
+            $dir = $realPath . '/var/cache';
+            if (DIRECTORY_SEPARATOR === '\\') {
+                $dir = strtr($dir, '/', '\\');
+                system('RMDIR /S /Q "'. $dir .'"');
+            } else {
+                system("rm -rf " . escapeshellarg($dir));
+            }
+
+        }
+    }
+
+    protected function replaceConfig()
+    {
+        if (!$this->config['rewrite_config']) {
+            return;
+        }
+
+        if (!is_file($this->config['rewrite_config'])) {
+            throw new Exception("Parameter 'rewrite_config' should be a file");
+        }
+
+        if (!is_readable($this->config['rewrite_config'])) {
+            throw new Exception("Cant read " . $this->config['rewrite_config']);
+        }
+
+        rename($this->getOriginalConfigFilePath(), $this->getBackupConfigPath());
+
+        copy($this->config['rewrite_config'], $this->getOriginalConfigFilePath());
+        $this->cleanCache();
+    }
+
+
+    protected function restoreConfig()
+    {
+        $backupConfigPath = $this->getBackupConfigPath();
+        if (file_exists($backupConfigPath)) {
+            rename($backupConfigPath, $this->getOriginalConfigFilePath());
+            $this->cleanCache();
+        }
+
     }
 
     /**
