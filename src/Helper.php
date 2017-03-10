@@ -110,7 +110,8 @@ class Helper extends Framework
 
     protected function replaceConfig()
     {
-        if (!$this->config['rewrite_config']) {
+        if (!isset($this->config['rewrite_config']) ||
+            !$this->config['rewrite_config']) {
             return;
         }
 
@@ -131,6 +132,11 @@ class Helper extends Framework
 
     protected function restoreConfig()
     {
+        if (!isset($this->config['rewrite_config']) ||
+            !$this->config['rewrite_config']) {
+            return;
+        }
+
         $backupConfigPath = $this->getBackupConfigPath();
         if (file_exists($backupConfigPath)) {
             rename($backupConfigPath, $this->getOriginalConfigFilePath());
