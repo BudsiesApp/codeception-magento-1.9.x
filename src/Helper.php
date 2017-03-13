@@ -35,7 +35,19 @@ class Helper extends Framework
 
     public function _initialize()
     {
-        //.........
+        spl_autoload_register([$this, 'classLoader']);
+    }
+
+    /**
+     * @param string $class
+     */
+    public function classLoader($class)
+    {
+        switch ($class) {
+            case 'Varien_File_Uploader':
+                require_once __DIR__ . '/Rewrites/Varien_File_Uploader.php';
+                return true;
+        }
     }
 
     public function _before(TestInterface $test)
@@ -223,6 +235,16 @@ class Helper extends Framework
         $this->headers = [];
         $this->client->followRedirects(true);
         return $result;
+    }
+
+    public function sendAjaxFile($uri, $field, $file)
+    {
+        $this->attachFile($field, $file);
+
+        $form = $form = $this->getFormFor($field = $this->getFieldByLabelOrCss($field));
+
+        $files = $form->getPhpFiles();
+        $this->clientRequest('POST', $uri, [], $files, ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'], null, false);
     }
 
     /**
