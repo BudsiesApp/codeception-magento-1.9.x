@@ -65,6 +65,48 @@ class Mage_Core_Model_Cookie extends \Mage_Core_Model_Cookie
     }
 
     /**
+     * Delete cookie
+     *
+     * @param string $name
+     * @param string $path
+     * @param string $domain
+     * @param int|bool $secure
+     * @param int|bool $httponly
+     * @return Mage_Core_Model_Cookie
+     */
+    public function delete($name, $path = null, $domain = null, $secure = null, $httponly = null)
+    {
+        /**
+         * Check headers sent
+         */
+        if (!$this->_getResponse()->canSendHeaders(false)) {
+            return $this;
+        }
+
+        if (is_null($path)) {
+            $path = $this->getPath();
+        }
+        if (is_null($domain)) {
+            $domain = $this->getDomain();
+        }
+
+        $newCookies = [];
+        foreach ($this->cookies as $cookie) {
+            if ($cookie['name'] === $name &&
+                $cookie['path'] === $path &&
+                $cookie['domain'] === $domain) {
+                continue;
+            }
+
+            $newCookies[] = $cookie;
+        }
+
+        $this->cookies = $newCookies;
+
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getCollectedValues()
