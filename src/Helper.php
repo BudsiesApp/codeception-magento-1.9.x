@@ -221,7 +221,7 @@ class Helper extends Framework
      *
      * @return mixed
      */
-    public function doApiRequest($method, $url, $params = [])
+    public function sendApiRequest(string $method, string $url, array $params = [])
     {
         $client = $this->getOauthClient();
 
@@ -237,14 +237,34 @@ class Helper extends Framework
         return $result;
     }
 
-    public function sendAjaxFile($uri, $field, $file)
+    /**
+     * @param string $uri
+     * @param string $field
+     * @param string $file
+     * @param array $params
+     */
+    public function sendAjaxFile(string $uri, string $field, string $file, array $params = [])
     {
         $this->attachFile($field, $file);
 
         $form = $form = $this->getFormFor($field = $this->getFieldByLabelOrCss($field));
 
         $files = $form->getPhpFiles();
-        $this->clientRequest('POST', $uri, [], $files, ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'], null, false);
+        $this->clientRequest('POST', $uri, $params, $files, ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'], null, false);
+    }
+
+    /**
+     * @return string
+     */
+    public function grabAdminFormKey(): string
+    {
+        $crawler = $this->match('script');
+        foreach ($crawler->getIterator() as $node) {
+            if (preg_match("/var\\s+FORM_KEY\\s+=\\s+'([A-Za-z0-9]+)'/m", $node->textContent, $matches)) {
+                return $matches[1];
+            }
+        }
+        return '';
     }
 
     /**
