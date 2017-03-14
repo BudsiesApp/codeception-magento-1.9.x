@@ -84,8 +84,10 @@ class Helper extends Framework
         $_COOKIE = [];
         $_REQUEST = [];
 
-        $this->restoreConfig();
+        $this->oauthClient = null;
+        $this->tokenCredentials = null;
 
+        $this->restoreConfig();
         parent::_after($test);
     }
 
