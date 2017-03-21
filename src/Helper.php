@@ -227,7 +227,11 @@ class Helper extends Framework
     {
         $client = $this->getOauthClient();
 
-        $fullUrl = $this->getHostUrl() . "/api/rest$url";
+        if (!preg_match('~^/api/rest~', $url)) {
+            $fullUrl = $this->getHostUrl() . "/api/rest$url";
+        }  else {
+            $fullUrl = $this->getHostUrl() . $url;
+        }
 
         $this->headers = $client->getHeaders($this->tokenCredentials, $method, $fullUrl);
         $this->headers['Content-Type'] = 'application/json';
@@ -268,6 +272,136 @@ class Helper extends Framework
         }
         return '';
     }
+
+    protected function getRunningClient()
+    {
+        if ($this->client->getInternalRequest() === null) {
+            throw new Exception("Response is empty. Use `\$I->sendApiRequest()` methods to send HTTP request");
+        }
+        return $this->client;
+    }
+
+
+    /**
+     * Sets HTTP header valid for all next requests. Use `deleteHeader` to unset it
+     *
+     * ```php
+     * <?php
+     * $I->haveHttpHeader('Content-Type', 'application/json');
+     * // all next requests will contain this header
+     * ?>
+     * ```
+     *
+     * @param $name
+     * @param $value
+     * @part json
+     * @part xml
+     */
+    public function haveHttpHeader($name, $value)
+    {
+        $this->headers[$name] = $value;
+    }
+
+    /**
+     * Deletes the header with the passed name.  Subsequent requests
+     * will not have the deleted header in its request.
+     *
+     * Example:
+     * ```php
+     * <?php
+     * $I->haveHttpHeader('X-Requested-With', 'Codeception');
+     * $I->sendGET('test-headers.php');
+     * // ...
+     * $I->deleteHeader('X-Requested-With');
+     * $I->sendPOST('some-other-page.php');
+     * ?>
+     * ```
+     *
+     * @param string $name the name of the header to delete.
+     */
+    public function deleteHeader($name)
+    {
+        unset($this->headers[$name]);
+    }
+
+    /**
+     * Checks over the given HTTP header and (optionally)
+     * its value, asserting that are there
+     *
+     * @param $name
+     * @param $value
+     * @part json
+     * @part xml
+     */
+    public function seeHttpHeader($name, $value = null)
+    {
+        if ($value !== null) {
+            $this->assertEquals(
+                $value,
+                $this->getRunningClient()->getInternalResponse()->getHeader($name)
+            );
+            return;
+        }
+        $this->assertNotNull($this->getRunningClient()->getInternalResponse()->getHeader($name));
+    }
+
+    /**
+     * Checks over the given HTTP header and (optionally)
+     * its value, asserting that are not there
+     *
+     * @param $name
+     * @param $value
+     * @part json
+     * @part xml
+     */
+    public function dontSeeHttpHeader($name, $value = null)
+    {
+        if ($value !== null) {
+            $this->assertNotEquals(
+                $value,
+                $this->getRunningClient()->getInternalResponse()->getHeader($name)
+            );
+            return;
+        }
+        $this->assertNull($this->getRunningClient()->getInternalResponse()->getHeader($name));
+    }
+
+    /**
+     * Checks that http response header is received only once.
+     * HTTP RFC2616 allows multiple response headers with the same name.
+     * You can check that you didn't accidentally sent the same header twice.
+     *
+     * ``` php
+     * <?php
+     * $I->seeHttpHeaderOnce('Cache-Control');
+     * ?>>
+     * ```
+     *
+     * @param $name
+     * @part json
+     * @part xml
+     */
+    public function seeHttpHeaderOnce($name)
+    {
+        $headers = $this->getRunningClient()->getInternalResponse()->getHeader($name, false);
+        $this->assertEquals(1, count($headers));
+    }
+
+    /**
+     * Returns the value of the specified header name
+     *
+     * @param $name
+     * @param Boolean $first Whether to return the first value or all header values
+     *
+     * @return string|array The first header value if $first is true, an array of values otherwise
+     * @part json
+     * @part xml
+     */
+    public function grabHttpHeader($name, $first = true)
+    {
+        return $this->getRunningClient()->getInternalResponse()->getHeader($name, $first);
+    }
+
 
     /**
      * Checks whether last response was valid JSON.
