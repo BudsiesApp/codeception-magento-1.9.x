@@ -64,6 +64,16 @@ class Client
     protected $isAdmin = false;
 
     /**
+     * @var string
+     */
+    protected $adminUser;
+
+    /**
+     * @var string
+     */
+    protected $adminPassword;
+
+    /**
      * oauth_verifier stored for use with.
      *
      * @var string
@@ -157,31 +167,13 @@ class Client
     {
         $url = $this->getAuthorizationUrl($temporaryIdentifier);
 
-        //http://budsies2.local.optimuspro.ru:8085/admin/oauth_authorize?oauth_token=035f7051eb556791bcf2b855e17ec384
         $this->module->amOnPage($url);
 
-        //POST TO: http://budsies2.local.optimuspro.ru:8085/index.php/admin/oauth_authorize/index/
-//        $formUrl = $this->module->grabFromCurrentUrl();
-//        $formKey = $this->module->grabValueFrom('[name=form_key]');
-//
-//        $response = $this->module->_request('POST', $formUrl, [
-//           'form_key'        => $formKey,
-//           'login[username]' => 'admin',
-//           'login[password]' => 'a123456'
-//        ]);
-
-        $this->module->fillField('login[username]', 'admin');
-        $this->module->fillField('login[password]', 'a123456');
+        $this->module->fillField('login[username]', $this->adminUser);
+        $this->module->fillField('login[password]', $this->adminPassword);
         $this->module->click('[type=submit]');
 
         $this->module->click('[title=Authorize]');
-
-//        $formUrl    = $this->module->grabAttributeFrom('#oauth_authorize_confirm', 'action');
-//        $oauthToken =  $this->module->grabValueFrom('[name=oauth_token]');
-//
-//        $response = $this->module->_request('POST', $formUrl, [
-//            'oauth_token' => $oauthToken,
-//        ]);
 
         return;
     }
@@ -578,6 +570,18 @@ class Client
         if (!isset($configuration['host'])) {
             throw new \Exception('Missing Magento Host');
         }
+
+        if (!isset($configuration['admin_user'])) {
+            throw new \Exception("Missing 'admin_user' parameter");
+        }
+
+        if (!isset($configuration['admin_password'])) {
+            throw new \Exception("Missing 'admin_password' parameter");
+        }
+
+        $this->adminUser = $configuration['admin_user'];
+        $this->adminPassword = $configuration['admin_password'];
+
         $url = parse_url($configuration['host']);
         $this->baseUri = sprintf('%s://%s', $url['scheme'], $url['host']);
 
@@ -588,6 +592,7 @@ class Client
         if (isset($url['path'])) {
             $this->baseUri .= '/'.trim($url['path'], '/');
         }
+
         $this->isAdmin = !empty($configuration['admin']);
         if (!empty($configuration['adminUrl'])) {
             $this->adminUrl = $configuration['adminUrl'].'/oauth_authorize';

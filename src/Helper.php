@@ -176,20 +176,39 @@ class Helper extends Framework
     }
 
     /**
+     * @param array $adminCredentials ['user' => 'admin', 'password' => 'a1223456']
      * @return OAuthClient
+     * @throws Exception
      */
-    protected function getOauthClient(): OAuthClient
+    protected function getOauthClient(array $adminCredentials = []): OAuthClient
     {
-        if ($this->oauthClient) {
+        if ($this->oauthClient && !$adminCredentials) {
             return $this->oauthClient;
         }
 
+        if (!$adminCredentials) {
+            $adminCredentials = [
+                'user'     => $this->config['default_admin_user'],
+                'password' => $this->config['default_admin_password']
+            ];
+        }
+
+        if (!isset($adminCredentials['user'])) {
+            throw new Exception('Missing admin user parameter');
+        }
+
+        if (!isset($adminCredentials['password'])) {
+            throw new Exception('Missing admin password parameter');
+        }
+
         $this->oauthClient = new OAuthClient($this, [
-            'identifier'   => $this->config['oauth_app_key'],
-            'secret'       => $this->config['oauth_app_secret'],
-            'callback_uri' => $this->config['oauth_app_callback'],
-            'host'         => $this->getHostUrl(),
-            'admin'        => true
+            'identifier'     => $this->config['oauth_app_key'],
+            'secret'         => $this->config['oauth_app_secret'],
+            'callback_uri'   => $this->config['oauth_app_callback'],
+            'host'           => $this->getHostUrl(),
+            'admin'          => true,
+            'admin_user'     => $adminCredentials['user'],
+            'admin_password' => $adminCredentials['password'],
         ]);
 
         $tempCredentials = $this->oauthClient->getTemporaryCredentials();
@@ -220,12 +239,12 @@ class Helper extends Framework
      * @param string $method
      * @param string $url
      * @param array $params
-     *
+     * @param array $adminCredentials ['user' => 'admin', 'password' => 'a1223456']
      * @return mixed
      */
-    public function sendApiRequest(string $method, string $url, array $params = [])
+    public function sendApiRequest(string $method, string $url, array $params = [], array $adminCredentials = [])
     {
-        $client = $this->getOauthClient();
+        $client = $this->getOauthClient($adminCredentials);
 
         if (!preg_match('~^/api/rest~', $url)) {
             $fullUrl = $this->getHostUrl() . "/api/rest$url";
