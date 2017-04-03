@@ -6,7 +6,7 @@ class Mage_Admin_Model_Session extends \Mage_Admin_Model_Session
 {
     public function __construct(array $parameters = [])
     {
-        if (!$parameters['response']) {
+        if (!isset($parameters['response']) || !$parameters['response']) {
             $parameters['response'] = new Mage_Core_Controller_Response_Http();
         }
 
