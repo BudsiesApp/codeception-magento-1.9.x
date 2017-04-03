@@ -183,6 +183,14 @@ class Connector extends Client
         $_SERVER['REQUEST_URI']    = $queryString === null ? $pathString : $pathString . '?' . $queryString;
         $_SERVER['REQUEST_METHOD'] = strtoupper($request->getMethod());
 
+        if (!defined('APPLICATION_ENV')) {
+            define('APPLICATION_ENV', 'development');
+        }
+
+        if (!isset($_SERVER['MAGE_IS_DEVELOPER_MODE'])) {
+            $_SERVER['MAGE_IS_DEVELOPER_MODE'] = 1;
+        }
+
         if ($this->https) {
             $_SERVER['HTTPS'] = true;
         }
