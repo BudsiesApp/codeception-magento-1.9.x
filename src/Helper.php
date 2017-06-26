@@ -242,8 +242,9 @@ class Helper extends Framework
      * @param array $adminCredentials ['user' => 'admin', 'password' => 'a1223456']
      * @return mixed
      */
-    public function sendApiRequest(string $method, string $url, array $params = [], array $adminCredentials = [])
-    {
+    public function sendApiRequest(string $method, string $url, array $params = [], array $adminCredentials = [],
+        int $version = 1
+    ) {
         $client = $this->getOauthClient($adminCredentials);
 
         if (!preg_match('~^/api/rest~', $url)) {
@@ -254,6 +255,7 @@ class Helper extends Framework
 
         $this->headers = $client->getHeaders($this->tokenCredentials, $method, $fullUrl);
         $this->headers['Content-Type'] = 'application/json';
+        $this->headers['Version'] = $version;
         // Parameters will be intercepted and encoded into json
         // see \Optimus\Magento1\Codeception\Rewrites\Mage_Api2_Model_Request
         $result  = $this->_request($method, $fullUrl, $params);
