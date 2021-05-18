@@ -15,9 +15,10 @@ class Mage_Core_Model_Cookie extends \Mage_Core_Model_Cookie
      * @param string $domain
      * @param int|bool $secure
      * @param bool $httponly
+     * @param string $sameSite
      * @return Mage_Core_Model_Cookie
      */
-    public function set($name, $value, $period = null, $path = null, $domain = null, $secure = null, $httponly = null)
+    public function set($name, $value, $period = null, $path = null, $domain = null, $secure = null, $httponly = null, $sameSite = null)
     {
         /**
          * Check headers sent
@@ -50,6 +51,14 @@ class Mage_Core_Model_Cookie extends \Mage_Core_Model_Cookie
         if (is_null($httponly)) {
             $httponly = $this->getHttponly();
         }
+        if (is_null($sameSite)) {
+            $sameSite = $this->getSameSite();
+        }
+
+        if ($sameSite === 'None') {
+            // Enforce specification SameSite None requires secure
+            $secure = true;
+        }
 
         $this->cookies[] = array(
             'name'     => $name,
@@ -58,7 +67,8 @@ class Mage_Core_Model_Cookie extends \Mage_Core_Model_Cookie
             'path'     => $path,
             'domain'   => $domain,
             'secure'   => $secure,
-            'httponly' => $httponly
+            'httponly' => $httponly,
+            'samesite' => $sameSite
         );
 
         return $this;
@@ -72,9 +82,10 @@ class Mage_Core_Model_Cookie extends \Mage_Core_Model_Cookie
      * @param string $domain
      * @param int|bool $secure
      * @param int|bool $httponly
+     * @param string $sameSite
      * @return Mage_Core_Model_Cookie
      */
-    public function delete($name, $path = null, $domain = null, $secure = null, $httponly = null)
+    public function delete($name, $path = null, $domain = null, $secure = null, $httponly = null, $sameSite = null)
     {
         /**
          * Check headers sent
