@@ -319,6 +319,29 @@ class Helper extends Framework
         return $result;
     }
 
+    public function sendVsbridgeApiRequest(string $method, int $storeId, string $url, array $params = [])
+    {
+        $host = $this->getHostUrl($storeId);
+
+        if (!preg_match('~^/vsbridge~', $url)) {
+            $fullUrl = $host . "/vsbridge$url";
+        } else {
+            $fullUrl = $host . $url;
+        }
+
+        $this->headers['HOST']          = $this->getStoreHost($storeId);
+        $this->headers['Content-Type']  = 'application/json';
+
+        $server = ['MAGE_RUN_CODE' => $this->getStoreCode($storeId)];
+
+        // Parameters will be intercepted and encoded into json
+        // see \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Request_Http
+        $result        = $this->_request($method, $fullUrl, $params, [], $server);
+        $this->headers = [];
+        $this->client->followRedirects(true);
+        return $result;
+    }
+
     /**
      * @param string $uri
      * @param string $field
