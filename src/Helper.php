@@ -8,6 +8,7 @@ use Codeception\TestInterface;
 use Optimus\Magento1\Codeception\Exceptions\Exception;
 use Optimus\Magento1\Codeception\Exceptions\OAuthAppCallbackException;
 use Optimus\Magento1\Codeception\OAuth\Client as OAuthClient;
+use Optimus\Magento1\Codeception\Interfaces\StoreInterface;
 use Codeception\Util\JsonArray;
 use Codeception\Util\JsonType;
 use Codeception\Util\XmlStructure;
@@ -17,20 +18,34 @@ use Codeception\PHPUnit\Constraint\JsonType as JsonTypeConstraint;
 
 class Helper extends Framework
 {
-    protected $requiredFields = ['homeDir', 'baseUrl'];
+    protected $requiredFields = ['homeDir', 'budsiesDomain', 'petsiesDomain', 'bulkordersDomain'];
 
     protected $tokenCredentials;
     protected $oauthClient;
 
+    protected function getStoresDomains(): array
+    {
+        return [
+            $this->config['budsiesDomain'],
+            $this->config['petsiesDomain'],
+            $this->config['bulkordersDomain'],
+        ];
+    }
+
     protected function getInternalDomains()
     {
-        $baseUrl = trim($this->config['baseUrl']);
-        if (strpos($baseUrl, ':')) {
-            $baseUrl = explode(':', $baseUrl)[0];
+        $storesDomains = $this->getStoresDomains();
+
+        $internalDomains = [];
+
+        foreach ($storesDomains as $storeDomain) {
+            $storeDomain = trim($storeDomain);
+            if (strpos($storeDomain, ':')) {
+                $storeDomain = explode(':', $storeDomain)[0];
+            }
+            $internalDomains[] = '~' . str_replace([':','.'], ['\\:','\\.'], $storeDomain . '~');
         }
-        return array_merge(parent::getInternalDomains(), [
-            '~' . str_replace([':','.'], ['\\:','\\.'], $baseUrl . '~')
-        ]);
+        return array_merge(parent::getInternalDomains(), $internalDomains);
     }
 
     public function _initialize()
@@ -54,16 +69,21 @@ class Helper extends Framework
     {
         $this->client = new Connector();
 
-        $baseUrl = trim($this->config['baseUrl']);
+        $storesDomains = $this->getStoresDomains();
 
-        if (preg_match('~^https?~', $baseUrl)) {
-            throw new \InvalidArgumentException(
-                "Please, define baseUrl parameter without protocol part: localhost or localhost:8000"
-            );
+        foreach ($storesDomains as $storeDomain) {
+            $storeDomain = trim($storeDomain);
+
+            if (preg_match('~^https?~', $storeDomain)) {
+                throw new \InvalidArgumentException(
+                    "Please, define domain parameter without protocol part: localhost or localhost:8000"
+                );
+            }
+
+            if (empty($this->headers['HOST'])) {
+                $this->headers['HOST'] = $storeDomain;
+            }
         }
-
-        $this->headers['HOST'] = $baseUrl;
-
 
         if (isset($this->config['https']) && $this->config['https']) {
             $this->client->https = true;
@@ -167,12 +187,49 @@ class Helper extends Framework
         return $this->config['https'] && $this->config['https'] === true ? 'https': 'http';
     }
 
+    protected function getStoreHost(int $storeId = StoreInterface::BUDSIES_STORE_ID): string
+    {
+        switch ($storeId) {
+            case StoreInterface::BUDSIES_STORE_ID:
+                $domain = $this->config['budsiesDomain'];
+                break;
+            case StoreInterface::PETSIES_STORE_ID:
+            case StoreInterface::PETSIES_AU_STORE_ID:
+            case StoreInterface::PETSIES_CA_STORE_ID:
+                $domain = $this->config['petsiesDomain'];
+                break;
+            case StoreInterface::BULKORDERS_STORE_ID:
+                $domain = $this->config['bulkordersDomain'];
+                break;
+            default:
+                $domain = $this->config['budsiesDomain'];
+        }
+
+        return $domain;
+    }
+
+    protected function getStoreCode(int $storeId = StoreInterface::BUDSIES_STORE_ID): string
+    {
+        switch ($storeId) {
+            case StoreInterface::PETSIES_STORE_ID:
+                $code = 'petsies_store';
+                break;
+            case StoreInterface::BULKORDERS_STORE_ID:
+                $code = 'bulkorders_store';
+                break;
+            default:
+                $code = 'default';
+        }
+
+        return $code;
+    }
+
     /**
      * @return string
      */
-    protected function getHostUrl(): string
+    protected function getHostUrl(int $storeId = StoreInterface::BUDSIES_STORE_ID): string
     {
-        return $this->getScheme() . '://' . $this->config['baseUrl'];
+        return $this->getScheme() . '://' . $this->getStoreHost($storeId);
     }
 
     /**
@@ -257,6 +314,29 @@ class Helper extends Framework
         // Parameters will be intercepted and encoded into json
         // see \Optimus\Magento1\Codeception\Rewrites\Mage_Api2_Model_Request
         $result  = $this->_request($method, $fullUrl, $params);
+        $this->headers = [];
+        $this->client->followRedirects(true);
+        return $result;
+    }
+
+    public function sendVsbridgeApiRequest(string $method, int $storeId, string $url, array $params = [])
+    {
+        $host = $this->getHostUrl($storeId);
+
+        if (!preg_match('~^/vsbridge~', $url)) {
+            $fullUrl = $host . "/vsbridge$url";
+        } else {
+            $fullUrl = $host . $url;
+        }
+
+        $this->headers['HOST']          = $this->getStoreHost($storeId);
+        $this->headers['Content-Type']  = 'application/json';
+
+        $server = ['MAGE_RUN_CODE' => $this->getStoreCode($storeId)];
+
+        // Parameters will be intercepted and encoded into json
+        // see \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Request_Http
+        $result        = $this->_request($method, $fullUrl, $params, [], $server);
         $this->headers = [];
         $this->client->followRedirects(true);
         return $result;

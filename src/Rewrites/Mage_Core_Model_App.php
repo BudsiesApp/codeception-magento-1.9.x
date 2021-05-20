@@ -18,4 +18,12 @@ class Mage_Core_Model_App extends \Mage_Core_Model_App
         }
         return $this->_response;
     }
+
+    public function getRequest()
+    {
+        if (empty($this->_request)) {
+            $this->_request = new \Optimus\Magento1\Codeception\Rewrites\Mage_Core_Controller_Request_Http();
+        }
+        return $this->_request;
+    }
 }
