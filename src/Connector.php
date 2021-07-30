@@ -3,13 +3,13 @@
 namespace Optimus\Magento1\Codeception;
 
 use Optimus\Magento1\Codeception\Exceptions\OAuthAppCallbackException;
-use Symfony\Component\BrowserKit\Client;
+use Symfony\Component\BrowserKit\AbstractBrowser;
 use Symfony\Component\BrowserKit\Response;
 use Codeception\Lib\Connector\Shared\PhpSuperGlobalsConverter;
 use Codeception\Util\Debug;
 use Optimus\Magento1\Codeception\Interfaces\CollectedHeadersInterface;
 
-class Connector extends Client
+class Connector extends AbstractBrowser
 {
     use PhpSuperGlobalsConverter;
 
