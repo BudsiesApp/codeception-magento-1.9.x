@@ -97,12 +97,7 @@ class Helper extends Framework
 
     public function _after(TestInterface $test)
     {
-        $_SESSION = [];
-        $_FILES = [];
-        $_GET = [];
-        $_POST = [];
-        $_COOKIE = [];
-        $_REQUEST = [];
+        $this->clearGlobalVariables();
 
         $this->oauthClient = null;
         $this->tokenCredentials = null;
@@ -321,6 +316,8 @@ class Helper extends Framework
 
     public function sendVsbridgeApiRequest(string $method, int $storeId, string $url, array $params = [])
     {
+        $this->clearGlobalVariables();
+
         $host = $this->getHostUrl($storeId);
 
         if (!preg_match('~^/vsbridge~', $url)) {
@@ -380,6 +377,15 @@ class Helper extends Framework
         return $this->client;
     }
 
+    protected function clearGlobalVariables(): void
+    {
+        $_SESSION = [];
+        $_FILES = [];
+        $_GET = [];
+        $_POST = [];
+        $_COOKIE = [];
+        $_REQUEST = [];
+    }
 
     /**
      * Sets HTTP header valid for all next requests. Use `deleteHeader` to unset it
