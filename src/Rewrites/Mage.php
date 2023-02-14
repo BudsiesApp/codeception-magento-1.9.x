@@ -1,5 +1,47 @@
 <?php
 
+define('DS', DIRECTORY_SEPARATOR);
+define('PS', PATH_SEPARATOR);
+define('BP', $homeDir);
+
+Mage::register('original_include_path', get_include_path());
+
+if (!empty($_SERVER['MAGE_IS_DEVELOPER_MODE']) || !empty($_ENV['MAGE_IS_DEVELOPER_MODE'])) {
+    Mage::setIsDeveloperMode(true);
+    ini_set('display_errors', '1');
+    ini_set('error_prepend_string', '<pre>');
+    ini_set('error_append_string', '</pre>');
+}
+
+/**
+ * Set include path
+ */
+$paths = [];
+$paths[] = BP . DS . 'app' . DS . 'code' . DS . 'local';
+$paths[] = BP . DS . 'app' . DS . 'code' . DS . 'community';
+$paths[] = BP . DS . 'app' . DS . 'code' . DS . 'core';
+$paths[] = BP . DS . 'lib';
+
+$appPath = implode(PS, $paths);
+set_include_path($appPath . PS . Mage::registry('original_include_path'));
+include_once "Mage/Core/functions.php";
+include_once "Varien/Autoload.php";
+
+Varien_Autoload::register();
+
+/** AUTOLOADER PATCH **/
+if (file_exists($autoloaderPath = BP . DS . 'vendor/autoload.php') ||
+    file_exists($autoloaderPath = BP . DS . '../vendor/autoload.php')
+) {
+    require $autoloaderPath;
+}
+/** AUTOLOADER PATCH **/
+
+/* Support additional includes, such as composer's vendor/autoload.php files */
+foreach (glob(BP . DS . 'app' . DS . 'etc' . DS . 'includes' . DS . '*.php') as $path) {
+    include_once $path;
+}
+
 /**
  * Main Mage hub class
  */
