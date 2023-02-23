@@ -73,18 +73,8 @@ class Connector extends AbstractBrowser
             include $compilerConfig;
         }
 
-//        $maintenanceFile = 'maintenance.flag';
-//
-//        if (file_exists($maintenanceFile)) {
-//            include_once dirname(__FILE__) . '/errors/503.php';
-//            exit;
-//        }
-
-        // require_once MAGENTO_ROOT . '/app/bootstrap.php';
-        // the following replaces bootstrap.php including
-        require_once MAGENTO_ROOT . '/vendor/autoload.php';
+        require_once MAGENTO_ROOT . '/app/bootstrap.php';
         require_once __DIR__ . '/Rewrites/Mage.php';
-        require_once MAGENTO_ROOT . '/app/Mage.bootstrap.php';
 
         $this->_isBootstrapped = true;
     }
@@ -192,7 +182,7 @@ class Connector extends AbstractBrowser
         }
 
         if ($this->https) {
-            $_SERVER['HTTPS'] = true;
+            $_SERVER['HTTPS'] = 'on';
         }
 
         parse_str($queryString, $params);
@@ -215,7 +205,10 @@ class Connector extends AbstractBrowser
         if (preg_match('#^/api/([^/]+)/#', $pathString, $match)) {
             $_GET['type']     = $match[1];
             $_REQUEST['type'] = $match[1];
+
             $_SERVER['SCRIPT_NAME'] = $_SERVER['SCRIPT_FILENAME'] = 'api.php';
+            putenv('SCRIPT_FILENAME=api.php');
+            
             $response = $this->doRequestOnApiEntry();
         } else {
             $_SERVER['SCRIPT_NAME'] = $_SERVER['SCRIPT_FILENAME'] = 'index.php';
